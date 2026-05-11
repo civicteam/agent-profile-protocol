@@ -65,6 +65,8 @@ outcomeParams:
 
 This is the existing `redact` action.
 
+> Use `outcome: redact` for **conditional** rewrites where failure must be fail-closed (e.g. "if this field matches a secret pattern, replace it"). For **unconditional** field stripping, prefer the `removeFields` / `pickFields` processors (see _04 - Pre- and post-processors_) — those are best-effort and don't abort the call if they misfire.
+
 ### `require-approval`
 
 Pause the call until a human approves. Behaviour matches today's "Approve If" / `ask` flow:
