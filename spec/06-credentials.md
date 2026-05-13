@@ -1,4 +1,4 @@
-# 07 - Credentials
+# 06 - Credentials
 
 Credentials sit _outside_ the JSON-RPC / MCP message layer. The protocol describes three concerns explicitly, and intentionally keeps them separable so an implementer can adopt one without the others.
 
@@ -152,10 +152,9 @@ The template language is intentionally tiny: `{{path.into.credential}}` interpol
 Credential injection runs **just before dispatch**, after every other request-stage layer (transforms, processors, guardrails). This is by design:
 
 * Earlier layers operate on the agent-facing request shape; they should not see secrets.
-* Audit (which runs last) sees the agent-facing form, _not_ the injected form, so secrets don't leak into audit records.
 * Guardrails do not gate on credential values; if you need to reject "unsigned" requests, that's a guardrail on a different field.
 
-See _09 - Execution chain_.
+See _08 - Execution chain_.
 
 ## Worked example — Gmail OAuth + GitHub PAT
 

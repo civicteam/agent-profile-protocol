@@ -1,4 +1,4 @@
-# 09 - Execution chain
+# 08 - Execution chain
 
 This is the canonical end-to-end ordering. Every layer doc references back here. If the per-layer text and this chain disagree, **this chain wins**.
 
@@ -35,9 +35,6 @@ for each enabled source S (base scope):
   # 5. List-stage guardrails (may hide more tools conditionally)
   apply guardrails  with stage=list
 
-  # 6. Audit observes the final list
-  apply audit       with stage=list
-
   emit materialised → final tool surface for source S
 
 # repeat for every active skill, in skill-scope
@@ -68,20 +65,16 @@ incoming { name, arguments } from agent
   apply guardrails with stage=request
   if outcome != allow: short-circuit
 
-  # 5. Audit observes the agent-facing form (just before injection)
-  apply audit      with stage=request
-
-  # 6. Credential injection (closest to the wire)
+  # 5. Credential injection (closest to the wire)
   apply credentials.inject for source
 
-  # 7. Dispatch to upstream
+  # 6. Dispatch to upstream
   result = upstream(source).tools/call(...)
 ```
 
-Two ordering invariants worth calling out:
+One ordering invariant worth calling out:
 
 * **Guardrails see what will be sent.** Processors run before guardrails so a guardrail evaluates the body that's about to leave.
-* **Audit doesn't see secrets.** Audit runs _before_ credential injection, so the audit record never contains injected secrets.
 
 ## `response` stage
 
@@ -105,9 +98,6 @@ upstream result
   # 4. Response transforms — clone.responseShape, mapping back to agent-facing names
   apply transforms with kind=clone (response stage)
 
-  # 5. Audit observes the final agent-visible response
-  apply audit with stage=response
-
   → return to agent
 ```
 
@@ -129,21 +119,19 @@ Default `executionIndex` ranges (recommended; not enforced):
 | Response processors | 1000+ |
 | Response guardrails | 0–999 |
 | Response clone | 200 |
-| Audit | always last in stage |
 
 A runtime emitting a profile from existing storage MAY assign default `executionIndex`s in these ranges so that imported profiles match the existing convention.
 
 ## Failure handling
 
-| Layer | On exception |
-| --- | --- |
-| Transform | Abort the stage (operator error — definitions are static config). |
-| Processor | Skip + warn. Continue with un-processed payload. |
-| Guardrail | Treat as `block` with the runtime error as `reason`. (Fail-closed.) |
-| Credential injection | Abort the call with a clear error. |
-| Audit | Log and continue. |
+| Layer | On exception | On `schemaPath` matching zero nodes |
+| --- | --- | --- |
+| Transform | Abort the stage (operator error — definitions are static config). | n/a |
+| Processor | Skip + warn. Continue with un-processed payload. | Skip + warn. |
+| Guardrail | Treat as `block` with the runtime error as `reason`. (Fail-closed.) | Per the guardrail's `onNoMatch` (see _05 - Guardrails_); defaults to `fail-closed` for `block` and `redact`, `allow` for `require-approval` and `allow`. |
+| Credential injection | Abort the call with a clear error. | n/a |
 
-This matches today's behaviour: `schema.constraint` failures abort, `response.transform` failures skip, audit best-effort.
+The exception column matches today's behaviour: `schema.constraint` failures abort, `response.transform` failures skip. The no-match column closes the silent-leak path where a redact guardrail finds nothing to redact and lets the original body through.
 
 ## Multi-skill composition
 
@@ -159,14 +147,13 @@ When several skills are active in addition to base, the chain runs once per scop
 ```
                          ┌───────────────────────────────┐
 agent ──tools/list──────►│  list stage                  │
-                         │   transforms → guardrails    │
-agent ◄──filtered list───┤   → audit                    │
+agent ◄──filtered list───┤   transforms → guardrails    │
                          └───────────────────────────────┘
 
                          ┌───────────────────────────────┐
 agent ──tools/call──────►│  request stage               │
                          │   transforms → processors    │
-                         │   → guardrails → audit       │
+                         │   → guardrails               │
                          │   → credential injection     │
                          └────────────┬──────────────────┘
                                       │
@@ -177,7 +164,7 @@ agent ──tools/call──────►│  request stage               │
                          ┌───────────────────────────────┐
                          │  response stage              │
                          │   processors → guardrails    │
-                         │   → transforms → audit       │
+                         │   → transforms              │
                          └────────────┬──────────────────┘
                                       ▼
 agent ◄──result──────────────────────

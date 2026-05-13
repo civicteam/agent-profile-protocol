@@ -25,7 +25,6 @@ A protocol that:
 | **Transform** | An operation that **modifies, adds, or removes a tool definition** before it reaches the agent (alias, clone, filter, preset params). |
 | **Processor** | A `pre` or `post` operation that **changes content** (request body, response body) without changing the tool definition. |
 | **Guardrail** | A gate. Evaluates a condition and yields an outcome (`allow`, `block`, `redact`, `require-approval`). |
-| **Audit** | A read-only observer. Cannot change requests, responses, or outcomes. |
 | **Skill** | A named bundle of (sources, transforms, processors, guardrails) scoped under an alias. |
 | **Multiplexer** | The runtime behaviour that combines all sources + skills into one exposed surface. |
 | **Stage** | One of `list`, `request`, `response`. A point in the chain at which transforms / processors / guardrails can attach. |
@@ -41,22 +40,21 @@ Within a single execution of one tool call, layers run in this order:
 ```
 agent
   ↓
-[ list ]      transforms (definition)  →  guardrails (list)  →  audit (list)
+[ list ]      transforms (definition)  →  guardrails (list)
   ↓
-[ request ]   transforms (alias/clone/preset)  →  processors (pre)  →  guardrails (request)  →  audit (request)  →  credential injection
+[ request ]   transforms (alias/clone/preset)  →  processors (pre)  →  guardrails (request)  →  credential injection
   ↓
 upstream source
   ↓
-[ response ]  processors (post)  →  guardrails (response)  →  transforms (clone-shape)  →  audit (response)
+[ response ]  processors (post)  →  guardrails (response)  →  transforms (clone-shape)
   ↓
 agent
 ```
 
-Three principles govern this ordering:
+Two principles govern this ordering:
 
 1. **Guardrails see what the agent will see.** Postprocessors run _before_ response guardrails so a redaction or block guardrail evaluates the same text the agent will see. Symmetrically, request preprocessors run _before_ request guardrails so a guardrail evaluates the body that will actually be sent.
-2. **Audit runs last in each stage.** Audit observes the final agent-facing form (or, on request, the final form just before credential injection). Audit cannot influence the call.
-3. **Credential injection is closest to the wire.** It runs after audit so the audit record never contains injected secrets, and after every other request layer so secrets don't leak into earlier processors/guardrails.
+2. **Credential injection is closest to the wire.** It runs after every other request layer so secrets don't leak into earlier processors/guardrails.
 
 ### Within a stage
 
@@ -92,7 +90,6 @@ This is _not_ a redesign. The protocol is a serialization format over the existi
 * `Tool` mirrors what the hub already exposes via `ScopedActionRegistry`.
 * `Transform` covers what `FilterHook`, `AliasHook`, `CloneResultHook`, `ParameterHook`, and `CustomDescriptionHook` do today — driven by `ProfileData` rows.
 * `Processor` and `Guardrail` map directly onto the unified `ConstraintTemplate` / `Constraint` model with `type: response.transform` and `type: schema.constraint` respectively.
-* `Audit` is the existing `AuditHook`.
 * `Credentials` mirrors `OAuthCredentials` + `CredentialData` + `CredentialJob` and the init-sidecar injection pattern.
 * `Skill` is a `Profile` row with `type: SKILL`, plus its `ProfileLink`.
 * The `multiplexer` is what `ScopedActionRegistry` does.

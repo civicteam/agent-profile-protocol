@@ -15,10 +15,11 @@ Guardrail:
   executionIndex: int?         # within-stage ordering; default 0
 
   when:
-    schemaPath: string         # JSONPath into the relevant body
+    schemaPath: string         # JSONPath into the relevant body (see "JSONPath dialect" in 04-processors)
     operator: enum             # equals, includes, excludes, exists, regex, less_than, ...
     value: any?                # operator-dependent
 
+  onNoMatch: enum?             # fail-closed | allow; see "No-match behaviour" below
   outcome: enum                # allow | block | redact | require-approval
   outcomeParams: object?       # outcome-specific config
 
@@ -26,6 +27,8 @@ Guardrail:
   reason: string?              # error/explanation shown when outcome triggers
   severityLevel: enum?         # info | warn | critical (informational, no enforcement)
 ```
+
+`schemaPath` and any path inside `outcomeParams` use the same JSONPath dialect as processors — see [JSONPath dialect](./04-processors.md#jsonpath-dialect) in _04 - Pre- and post-processors_.
 
 `stage` is one of:
 
@@ -36,6 +39,28 @@ Guardrail:
 | `response` | The post-processed response body the agent will see | After processors, before transforms. |
 
 `when` is the gate condition. The guardrail **fires** when `when` evaluates to true — `outcome` is what to do when it fires.
+
+## No-match behaviour
+
+A guardrail's `schemaPath` can yield **zero matches** — the field the guardrail was meant to inspect simply isn't present in the payload. Without an explicit rule, this becomes a silent leak path: a redact guardrail that finds nothing to redact lets the original body through unchanged.
+
+`onNoMatch` controls what happens in that case:
+
+| Value | Behaviour |
+| --- | --- |
+| `fail-closed` | Treat zero matches as a guardrail failure. The call is blocked with `reason` (or a generic "guardrail path did not match" message). |
+| `allow` | Treat zero matches as "guardrail did not fire". The call continues as if the condition evaluated to false. |
+
+**Defaults**, when `onNoMatch` is omitted:
+
+| Outcome | Default `onNoMatch` |
+| --- | --- |
+| `block` | `fail-closed` — if you can't evaluate the gate, don't open it. |
+| `redact` | `fail-closed` — if you can't find the field to redact, don't pass the payload through. |
+| `require-approval` | `allow` — approval gates that can't even match the trigger condition shouldn't pause every call. |
+| `allow` | `allow` — a positive override that doesn't match is just a no-op. |
+
+A profile MAY override these per guardrail (e.g. `onNoMatch: allow` on a redact rule when the field is genuinely optional).
 
 ## Outcomes
 
@@ -110,7 +135,7 @@ The protocol document is a single profile. Today's runtime layers constraints at
 
 ## When guardrails run
 
-See _09 - Execution chain_. Summary:
+See _08 - Execution chain_. Summary:
 
 * `list` guardrails: while materialising the tool list, after transforms.
 * `request` guardrails: after request processors, before credential injection and dispatch. (Guardrails evaluate the body that will actually be sent.)

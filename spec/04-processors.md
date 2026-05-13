@@ -32,6 +32,40 @@ The shape mirrors the existing `ConstraintTemplate`. The key changes from today:
 * The condition section uses `when:` for clarity (`schemaPath`/`operator`/`value` together).
 * `action` no longer overlaps with `redact`/`reject` — those move to guardrails (_05 - Guardrails_).
 
+## JSONPath dialect
+
+Both `schemaPath` and `actionPath` use JSONPath, but with a small set of extensions over the standard. Guardrails (_05 - Guardrails_) use the same dialect.
+
+| Construct | Source | Meaning |
+| --- | --- | --- |
+| Standard JSONPath (`$`, `.`, `[*]`, `[?(@.x==y)]`, …) | RFC 9535-ish | Baseline. |
+| `^` (parent) | JSONPath Plus | Selects the parent of the current node. Lets `actionPath` reach a sibling of a `schemaPath` match. |
+| `parse(text)` | Civic extension | Treats the string at the named field as nested JSON and continues the path inside it. Common case: tool responses that wrap structured data in `content[*].text`. |
+
+### `actionPath` relative to `schemaPath`
+
+`actionPath` may be either an absolute JSONPath (rooted at `$`) or a path **relative to each `schemaPath` match**. This matters when `schemaPath` matches inside an array: each match has its own implicit root, and `actionPath` applies once per match.
+
+### Worked example
+
+For a response shaped like:
+
+```json
+{
+  "content": [
+    { "text": "{\"user\": {\"login\": \"alice\"}}" },
+    { "text": "{\"user\": {\"login\": \"bob\"}}" }
+  ]
+}
+```
+
+A constraint of `content[*].parse(text)[*].user.login` against allowed users `["alice"]`:
+
+1. **Pre-parse.** `parse(text)` converts the JSON-in-string at `content[*].text` into objects.
+2. **Query.** JSONPath walks `content[*].text[*].user.login` and finds `alice`, `bob`.
+3. **Match.** `bob` at `$['content'][1]['text'][0]['user']['login']` violates the constraint.
+4. **Navigate.** `actionPath: "^"` selects the parent — `$['content'][1]['text'][0]['user']` — so a redact action can replace the whole user object, not just the offending login.
+
 ## Action catalogue
 
 This is the v1 action set. Runtimes MAY support additional actions via a registry; unknown actions MUST cause the runtime to refuse to start (fail-closed) so a profile that depends on a missing action does not silently degrade.
@@ -107,7 +141,7 @@ processors:
 
 ## Where processors sit in the chain
 
-See _09 - Execution chain_ for the canonical order. In short:
+See _08 - Execution chain_ for the canonical order. In short:
 
 * `request` processors run **after** request-stage transforms but **before** request-stage guardrails — so a guardrail evaluates the body that will actually be dispatched.
 * `response` processors run **before** response-stage guardrails — so a guardrail evaluates the body the agent will actually see.
