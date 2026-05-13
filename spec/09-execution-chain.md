@@ -135,15 +135,15 @@ A runtime emitting a profile from existing storage MAY assign default `execution
 
 ## Failure handling
 
-| Layer | On exception |
-| --- | --- |
-| Transform | Abort the stage (operator error — definitions are static config). |
-| Processor | Skip + warn. Continue with un-processed payload. |
-| Guardrail | Treat as `block` with the runtime error as `reason`. (Fail-closed.) |
-| Credential injection | Abort the call with a clear error. |
-| Audit | Log and continue. |
+| Layer | On exception | On `schemaPath` matching zero nodes |
+| --- | --- | --- |
+| Transform | Abort the stage (operator error — definitions are static config). | n/a |
+| Processor | Skip + warn. Continue with un-processed payload. | Skip + warn. |
+| Guardrail | Treat as `block` with the runtime error as `reason`. (Fail-closed.) | Per the guardrail's `onNoMatch` (see _05 - Guardrails_); defaults to `fail-closed` for `block` and `redact`, `allow` for `require-approval` and `allow`. |
+| Credential injection | Abort the call with a clear error. | n/a |
+| Audit | Log and continue. | Record the no-match and continue. |
 
-This matches today's behaviour: `schema.constraint` failures abort, `response.transform` failures skip, audit best-effort.
+The exception column matches today's behaviour: `schema.constraint` failures abort, `response.transform` failures skip, audit best-effort. The no-match column is new — it closes the silent-leak path where a redact guardrail finds nothing to redact and lets the original body through.
 
 ## Multi-skill composition
 

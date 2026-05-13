@@ -88,6 +88,18 @@ sources:
           required: [region]
 ```
 
+### Inline tools vs. upstream `tools/list`
+
+When a source both declares `tools` inline **and** advertises its own `tools/list` (the partial-overlap case), the rule is:
+
+| Situation | Result |
+| --- | --- |
+| Tool name appears inline only | Inline definition is used. The upstream is never asked about it. |
+| Tool name appears upstream only | Upstream definition is used as-is (lifted with `meta.sourceId` stamped). |
+| Tool name appears in both | **Inline wins.** The inline definition fully replaces the upstream one (no field-level merge). The runtime SHOULD log a warning so operators can spot accidental shadowing. |
+
+A profile that wants to suppress an upstream tool without redefining it should use a `filter` transform (_03 - Tool transforms_), not an inline override.
+
 ## Why this is the bedrock
 
 Every other layer in the protocol references tools by `(sourceId, name)` or by tag. Keeping the tool definition itself MCP-shaped means:

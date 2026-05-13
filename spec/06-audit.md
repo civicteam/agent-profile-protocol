@@ -2,7 +2,7 @@
 
 An **audit** entry is a read-only observer. It cannot modify a request, response, or outcome. It exists so a profile can declaratively say "send a copy of these calls to this sink" without that sink being a guardrail or processor.
 
-This maps to today's `AuditHook`.
+> Audit is the least-implemented layer in current Civic MCP — there is no end-to-end `AuditHook` in the runtime today, only references in specs and partial structured-logging coverage. This section is therefore best read as a forward-looking design rather than a serialization of existing behaviour.
 
 ## Audit schema
 
@@ -79,9 +79,4 @@ audit:
 
 ## What this maps to today
 
-| Field | Today |
-| --- | --- |
-| `stage`, `target` | Configured per-hook in `Hook_Audit` `ProfileData`. |
-| `sink.type=webhook` | The webhook URL stored in `Hook_Audit` config. |
-| `redact` | Manual today; some redaction is applied by the structured logger. |
-| Failure mode | "Best-effort, never aborts the call" — already today's `AuditHook` behaviour. |
+There is no audit hook in the current Civic MCP runtime; the closest analogues are partial structured-logging coverage and ad-hoc per-deployment webhooks. The fields in this section therefore describe the target shape rather than a 1:1 mapping from existing code.
