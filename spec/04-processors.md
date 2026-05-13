@@ -141,7 +141,7 @@ processors:
 
 ## Where processors sit in the chain
 
-See _09 - Execution chain_ for the canonical order. In short:
+See _08 - Execution chain_ for the canonical order. In short:
 
 * `request` processors run **after** request-stage transforms but **before** request-stage guardrails — so a guardrail evaluates the body that will actually be dispatched.
 * `response` processors run **before** response-stage guardrails — so a guardrail evaluates the body the agent will actually see.

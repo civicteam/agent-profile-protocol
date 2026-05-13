@@ -10,7 +10,7 @@
 
 ## Why a protocol
 
-Today the Civic MCP hub combines: per-server tool definition transforms (alias/clone/filter/preset params), pre- and post-processors, guardrails (gates), audit observation, credential acquisition + injection, skill bundling, and multiplexing of multiple upstream servers behind one endpoint. All of these live in code and DB rows. None of them is portable.
+Today the Civic MCP hub combines: per-server tool definition transforms (alias/clone/filter/preset params), pre- and post-processors, guardrails (gates), credential acquisition + injection, skill bundling, and multiplexing of multiple upstream servers behind one endpoint. All of these live in code and DB rows. None of them is portable.
 
 Pulling a declarative protocol out lets us:
 
@@ -30,11 +30,10 @@ The proposal is split into the following files. Read in order if you're new to i
 | 03 | [03-tool-transforms.md](./03-tool-transforms.md) | Alias, clone, filter, preset-params — operations that **modify, add, or remove** tool definitions. |
 | 04 | [04-processors.md](./04-processors.md) | Request preprocessors and response postprocessors — content transforms that do **not** change the tool definition. |
 | 05 | [05-guardrails.md](./05-guardrails.md) | Gates: rule-based block / redact / require-approval. |
-| 06 | [06-audit.md](./06-audit.md) | Read-only observation hooks. |
-| 07 | [07-credentials.md](./07-credentials.md) | The non-JSON-RPC concerns: satisfying, persisting/sourcing, and injecting credentials. |
-| 08 | [08-skills.md](./08-skills.md) | Bundles of tools + instructions, scoped under an alias. |
-| 09 | [09-execution-chain.md](./09-execution-chain.md) | The full pipeline, ordering, and how the layers compose end-to-end. |
-| 10 | [10-examples.md](./10-examples.md) | Full and minimal worked profiles in YAML. |
+| 06 | [06-credentials.md](./06-credentials.md) | The non-JSON-RPC concerns: satisfying, persisting/sourcing, and injecting credentials. |
+| 07 | [07-skills.md](./07-skills.md) | Bundles of tools + instructions, scoped under an alias. |
+| 08 | [08-execution-chain.md](./08-execution-chain.md) | The full pipeline, ordering, and how the layers compose end-to-end. |
+| 09 | [09-examples.md](./09-examples.md) | Full and minimal worked profiles in YAML. |
 
 ## Top-level shape (preview)
 
@@ -55,8 +54,6 @@ transforms: []  # alias / clone / filter / preset-params
 processors: []  # request preprocessors + response postprocessors
 
 guardrails: []  # gates (block / redact / approve)
-
-audit: []       # read-only observers
 
 credentials: []  # provider configs + injection rules
 ```

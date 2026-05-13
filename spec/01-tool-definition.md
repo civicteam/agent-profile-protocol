@@ -32,7 +32,7 @@ Reserved keys (other layers may use the same `meta` block):
 | `meta.sourceId` | string | runtime / multiplexer | Which `Source` this tool came from. Required for any tool produced by lifting from a source. |
 | `meta.upstreamName` | string | transforms (alias) | The original `name` on the source, if `name` was rewritten. |
 | `meta.scope` | `{ type: "base" }` \| `{ type: "skill", skillAlias: string }` | multiplexer / skills | Which scope produced this tool. |
-| `meta.tags` | string\[\] | guardrails / audit | Optional labels useful for matching (e.g. `["destructive", "external"]`). |
+| `meta.tags` | string\[\] | guardrails | Optional labels useful for matching (e.g. `["destructive", "external"]`). |
 | `meta.billing` | object | runtime | Per-call cost, rate limits, etc. — not part of v1 spec, runtime-defined. |
 
 A tool that came from a source unmodified looks like:
@@ -70,7 +70,7 @@ You do **not** typically write `Tool` records by hand at the top level. The runt
 2. Applying any `transforms` that produce/clone/rename/filter tools.
 3. Stamping `meta` according to the operations applied.
 
-The materialised list — what the agent sees on `tools/list` — is the result of this pipeline. See _09 - Execution chain_.
+The materialised list — what the agent sees on `tools/list` — is the result of this pipeline. See _08 - Execution chain_.
 
 That said, **a profile may declare tools inline** for sources that don't supply their own schema (e.g. a `cli-exec` source). When a source declares `tools` inline, those tools are the canonical set for that source.
 
@@ -110,7 +110,7 @@ Every other layer in the protocol references tools by `(sourceId, name)` or by t
 
 ## What is deliberately **not** in `Tool`
 
-* Auth / credential requirements. These belong in _07 - Credentials_, keyed by `sourceId` (or finer by `(sourceId, name)`).
+* Auth / credential requirements. These belong in _06 - Credentials_, keyed by `sourceId` (or finer by `(sourceId, name)`).
 * Rate limits / billing. These are runtime concerns; the protocol leaves a slot in `meta` but does not standardise the shape in v1.
 * "Approval required" / risk levels. These belong in guardrails (_05 - Guardrails_), not on the tool itself, so that the same tool can be unrestricted in one profile and gated in another.
 * Hidden / disabled state. Filtering is a transform (_03 - Tool transforms_), not a property of the tool.

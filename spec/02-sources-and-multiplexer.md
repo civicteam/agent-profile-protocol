@@ -95,7 +95,7 @@ What the multiplexer guarantees:
 
 * One MCP `initialize` exchange exposes all materialised tools, resources, and resource templates from all enabled sources and active skills.
 * Tool calls are routed to the originating source by `meta.sourceId` (set during materialisation).
-* Skills, when loaded, register additional tools under their own scope without overwriting base-scope tools (see _08 - Skills_).
+* Skills, when loaded, register additional tools under their own scope without overwriting base-scope tools (see _07 - Skills_).
 
 What the multiplexer does **not** do:
 
@@ -136,4 +136,4 @@ Each entry carries `meta.sourceId` so downstream layers (transforms, processors,
 
 ## Sources and credentials
 
-The `auth: { ref: "credentials/..." }` field is the _only_ place sources reference credentials. Everything else about credential satisfaction, persistence, and injection is in _07 - Credentials_. This keeps source records portable: a profile that doesn't need credential management at all (e.g. a public read-only HTTP MCP) just omits `auth`.
+The `auth: { ref: "credentials/..." }` field is the _only_ place sources reference credentials. Everything else about credential satisfaction, persistence, and injection is in _06 - Credentials_. This keeps source records portable: a profile that doesn't need credential management at all (e.g. a public read-only HTTP MCP) just omits `auth`.

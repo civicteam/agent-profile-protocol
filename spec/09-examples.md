@@ -1,4 +1,4 @@
-# 10 - Examples
+# 09 - Examples
 
 Two worked example profiles — a fully-populated one demonstrating every layer, and a minimal one showing the smallest useful shape.
 
@@ -10,7 +10,6 @@ Demonstrates every layer of the protocol with a realistic combination:
 * Tool transforms (filter, alias, clone, preset-param, describe).
 * Pre/post processors (HTML→Markdown, default region, field stripping).
 * Guardrails (block external email, redact secrets, require approval).
-* Audit (webhook + log).
 * Credentials (OAuth + PAT + service account file).
 * One always-loaded skill (Jira) and one on-demand skill (GitHub-readonly).
 
@@ -162,21 +161,6 @@ guardrails:
       prompt: "Approve destructive call to {{tool.name}}?"
       expirySeconds: 300
     executionIndex: 100
-
-# ─── AUDIT (read-only observers) ──────────────────────────────────────────────
-audit:
-  - stage: response
-    target: { sourceId: "*", tags: ["destructive"] }
-    sink:
-      type: webhook
-      url: "https://audit.example.com/destructive"
-      headers: { authorization: "Bearer {{secrets.AUDIT_TOKEN}}" }
-    include: { request: true, response: true, metadata: true }
-    redact: ["$..password", "$..token"]
-
-  - stage: request
-    target: { sourceId: "gmail" }
-    sink: { type: log, level: info, channel: "audit.gmail" }
 
 # ─── CREDENTIALS ──────────────────────────────────────────────────────────────
 credentials:

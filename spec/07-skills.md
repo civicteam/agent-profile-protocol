@@ -1,6 +1,6 @@
-# 08 - Skills
+# 07 - Skills
 
-A **skill** in this protocol is a named, scoped bundle of (sources, transforms, processors, guardrails, audit) that the agent can load on demand. Skills do **not** redefine the wider concept of "a skill" — Claude skills, Civic skills, etc. — they describe how a profile groups protocol-level resources under a togglable name.
+A **skill** in this protocol is a named, scoped bundle of (sources, transforms, processors, guardrails) that the agent can load on demand. Skills do **not** redefine the wider concept of "a skill" — Claude skills, Civic skills, etc. — they describe how a profile groups protocol-level resources under a togglable name.
 
 This maps to today's `Profile` rows with `type: SKILL` plus `ProfileLink`.
 
@@ -18,7 +18,6 @@ Skill:
   transforms: [Transform]?
   processors: [Processor]?
   guardrails: [Guardrail]?
-  audit: [Audit]?
   credentials: [Credential]?      # skill-scoped credentials (rare)
 ```
 
@@ -55,8 +54,7 @@ When a skill is active, its protocol layers compose with the base profile's laye
 2. **Transforms**: union. Skill transforms target the skill's scope (`target.scope: skill` is implicit). To target a base-scope tool from inside a skill, the transform must explicitly declare `target.scope: base`.
 3. **Processors**: union. Same scoping rule as transforms.
 4. **Guardrails**: union. **Important:** skill guardrails do not weaken base guardrails. If both a base guardrail and a skill guardrail target the same call, both run; the more restrictive outcome wins (`block` > `require-approval` > `redact` > `allow`).
-5. **Audit**: union.
-6. **Credentials**: skill credentials are scoped to the skill — they do not leak to the base profile or other skills.
+5. **Credentials**: skill credentials are scoped to the skill — they do not leak to the base profile or other skills.
 
 ## Skill-injected instructions
 

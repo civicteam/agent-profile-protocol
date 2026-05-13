@@ -135,7 +135,7 @@ The protocol document is a single profile. Today's runtime layers constraints at
 
 ## When guardrails run
 
-See _09 - Execution chain_. Summary:
+See _08 - Execution chain_. Summary:
 
 * `list` guardrails: while materialising the tool list, after transforms.
 * `request` guardrails: after request processors, before credential injection and dispatch. (Guardrails evaluate the body that will actually be sent.)

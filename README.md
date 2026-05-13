@@ -1,6 +1,6 @@
 # agent-profile-protocol
 
-Home of the **Agent Profile Protocol** — a declarative, portable description of the layer between an agent and its underlying tools (sources, transforms, processors, guardrails, audit, credentials, skills).
+Home of the **Agent Profile Protocol** — a declarative, portable description of the layer between an agent and its underlying tools (sources, transforms, processors, guardrails, credentials, skills).
 
 The protocol is what Civic MCP implements today in code and DB rows, lifted out into a single round-trippable document so:
 
@@ -20,11 +20,10 @@ Sections (read in order if you're new to it):
 4. [03 - Tool transforms](./spec/03-tool-transforms.md)
 5. [04 - Pre- and post-processors](./spec/04-processors.md)
 6. [05 - Guardrails](./spec/05-guardrails.md)
-7. [06 - Audit](./spec/06-audit.md)
-8. [07 - Credentials](./spec/07-credentials.md)
-9. [08 - Skills](./spec/08-skills.md)
-10. [09 - Execution chain](./spec/09-execution-chain.md)
-11. [10 - Examples](./spec/10-examples.md)
+7. [06 - Credentials](./spec/06-credentials.md)
+8. [07 - Skills](./spec/07-skills.md)
+9. [08 - Execution chain](./spec/08-execution-chain.md)
+10. [09 - Examples](./spec/09-examples.md)
 
 ## Status
 
