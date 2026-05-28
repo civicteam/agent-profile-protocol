@@ -20,10 +20,13 @@ compose in document order.
 
 ## Canonical syntax
 
-* Every transform / processor / guardrail entry is a tagged object with a
-  `kind:` discriminator (`kind: clone`, `kind: alias`, `kind: preset-parameter`,
-  `kind: filter`, `kind: request`, …). Other forms (single-key wrappers, kind-keyed
-  maps) are **not** part of the spec.
+* Each entry is a tagged object. **Transforms** use `kind:` (`kind: alias`,
+  `kind: clone`, `kind: filter`, `kind: preset-parameter`). **Processors and
+  guardrails** use `stage:` (`stage: request`, `stage: response`, and
+  `stage: list` for guardrails) — they attach at a stage of the chain, and
+  the actual operation lives in `action:` (processors) or `outcome:`
+  (guardrails). Other syntaxes (single-key wrappers, kind-keyed maps) are
+  **not** part of the spec.
 * `target:` is the **only** way to point at a tool. It accepts:
   * a bare string — one tool;
   * a list of strings — several tools;
@@ -140,7 +143,7 @@ transforms:
 
 processors:
   # Block outbound mail to civic.com addresses on the renamed tool.
-  - kind: request
+  - stage: request
     target: informTeam
     when:
       schemaPath: $.to
@@ -149,7 +152,7 @@ processors:
     action: block
 
   # Same rule, applied to two tools at once. Note the FOOTGUN below.
-  - kind: request
+  - stage: request
     target: [informTeam, draftEmail]
     when:
       schemaPath: $.to
@@ -162,7 +165,7 @@ processors:
 #   above, because processors match by current tool name and `notifyMe` is
 #   not in either target list. Cloning a tool past a processor effectively
 #   bypasses the processor. A conformant runtime SHOULD emit a warning when
-#   a clone's `from` is the target of a processor.
+#   a clone's `target` is also the `target` of a processor.
 # * If `sendEmail` had been removed (e.g. via a `filter` transform) before
 #   this document was applied, the processors here would fail to load with
 #   a parse error — processors targeting an unknown name are rejected at

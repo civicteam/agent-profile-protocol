@@ -30,7 +30,7 @@ matches:
 
 processors:
   # Logs: keep only what the agent reasons over.
-  - kind: response
+  - stage: response
     target: query_loki_logs
     action: pickFields
     actionPath: "$.data.result[*].values[*]"
@@ -40,7 +40,7 @@ processors:
 
   # Long messages (stack traces, JSON blobs in log lines) get truncated.
   # `smart` strategy preserves whole tokens; `hard` cuts mid-token.
-  - kind: response
+  - stage: response
     target: query_loki_logs
     action: abbreviate
     actionPath: "$.data.result[*].values[*].message"
@@ -52,7 +52,7 @@ processors:
 
   # Metrics: tabular time-series compress dramatically as CSV because the
   # JSON form repeats every key on every row.
-  - kind: response
+  - stage: response
     target: query_prometheus
     action: jsonToCSV
     actionPath: "$.data.result"
@@ -64,7 +64,7 @@ processors:
   # Drop noisy metadata fields from search hits across every Grafana tool
   # in this connection. `*.field` wildcards in pickFields/removeFields let
   # one rule cover an array of similarly-shaped objects.
-  - kind: response
+  - stage: response
     action: removeFields
     actionParams:
       fields:

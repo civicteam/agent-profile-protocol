@@ -9,7 +9,7 @@ Guardrails_) when you need fail-stop behaviour.
 
 ```yaml
 Processor:
-  kind: enum                  # request | response
+  stage: enum                 # request | response — which leg of the chain this attaches to
   target: string | [string]?  # which tools — see "Targeting"
   enabled: boolean?           # default true
   executionIndex: int?        # within-stage ordering; default 1000
@@ -20,11 +20,17 @@ Processor:
     operator: enum            # equals | exists | includes | regex | …
     value: any?               # operator-dependent
 
-  # Action.
-  action: enum                # see action catalogue below
+  # Action — the actual operation. See action catalogue below.
+  action: enum                # htmlToMarkdown | pickFields | block | …
   actionPath: string?         # JSONPath of where the action applies; defaults to "$"
   actionParams: object?       # action-specific config
 ```
+
+`stage:` is the discriminator, matching the shape used by guardrails (_04 -
+Guardrails_). Transforms use `kind:` because they have distinct operation
+kinds (`alias`, `clone`, `filter`, `preset-parameter`); processors and
+guardrails attach at a stage of the chain, and the actual operation lives in
+`action:` (processors) or `outcome:` (guardrails).
 
 ## Targeting
 
@@ -141,7 +147,7 @@ guardrail with `outcome: redact` (see _04 - Guardrails_).
 
 ```yaml
 processors:
-  - kind: response
+  - stage: response
     when: { schemaPath: "$.content", operator: "exists", value: true }
     action: htmlToMarkdown
     actionPath: "$.content"
@@ -153,7 +159,7 @@ processors:
 
 ```yaml
 processors:
-  - kind: response
+  - stage: response
     target: getJiraIssue
     action: pickFields
     actionPath: "$"
@@ -166,7 +172,7 @@ processors:
 
 ```yaml
 processors:
-  - kind: request
+  - stage: request
     target: informTeam
     when:
       schemaPath: $.to

@@ -76,7 +76,7 @@ apply transforms with kind = clone        (request stage: merge clone presets)
 apply transforms with kind = preset-parameter
 
 # 3. Request processors.
-apply processors with kind = request
+apply processors with stage = request
 
 # 4. Request guardrails — may block, redact, or require approval.
 apply guardrails with stage = request
@@ -100,7 +100,7 @@ upstream result
 
 # 1. Response processors — collapse to agent-facing shape (htmlToMarkdown,
 #    pickFields, etc).
-apply processors with kind = response
+apply processors with stage = response
 
 # 2. Response guardrails — evaluate the form the agent will see.
 apply guardrails with stage = response
