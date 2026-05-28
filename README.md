@@ -1,12 +1,21 @@
 # agent-profile-protocol
 
-Home of the **Agent Profile Protocol** — a declarative, portable description of the layer between an agent and its underlying tools (sources, transforms, processors, guardrails, credentials, skills).
+Home of the **Agent Profile Protocol** — a declarative, portable description of the
+manipulation layer between an agent client and the upstream MCP servers a host has
+connected to. A profile attaches transforms, processors, and guardrails to one or more
+MCP connections via a `matches` block, expressed as a multi-document YAML stream.
 
-The protocol is what Civic MCP implements today in code and DB rows, lifted out into a single round-trippable document so:
+The protocol is lifted out of what Civic MCP implements today in code and DB rows, so:
 
 - configuration can be imported/exported as one file,
-- runtimes can adopt subsets (e.g. just guardrails, or just credential injection),
-- external implementers — including future non-MCP sources — have a target to build against.
+- hosts can adopt subsets (e.g. just guardrails),
+- external implementers — including future non-MCP transports — have a target to build
+  against.
+
+The protocol is deliberately **scoped to manipulation and persistence**: it does not
+cover connection setup, transport, or credential acquisition flows. It does declare
+**where** credentials are persisted (file, authz-api, …) so a profile can move between
+deployments without rewriting everything else.
 
 ## Where the spec lives
 
@@ -15,16 +24,15 @@ The current draft is in [`spec/`](./spec/README.md). Start there.
 Sections (read in order if you're new to it):
 
 1. [00 - Principles, terminology, ordering](./spec/00-principles.md)
-2. [01 - Tool definition](./spec/01-tool-definition.md)
-3. [02 - Sources and multiplexer](./spec/02-sources-and-multiplexer.md)
-4. [03 - Tool transforms](./spec/03-tool-transforms.md)
-5. [04 - Pre- and post-processors](./spec/04-processors.md)
-6. [05 - Guardrails](./spec/05-guardrails.md)
-7. [06 - Credentials](./spec/06-credentials.md)
-8. [07 - Skills](./spec/07-skills.md)
-9. [08 - Execution chain](./spec/08-execution-chain.md)
-10. [09 - Examples](./spec/09-examples.md)
+2. [01 - Matching](./spec/01-matching.md)
+3. [02 - Tool transforms](./spec/02-tool-transforms.md)
+4. [03 - Pre- and post-processors](./spec/03-processors.md)
+5. [04 - Guardrails](./spec/04-guardrails.md)
+6. [05 - Credentials](./spec/05-credentials.md)
+7. [06 - Execution chain](./spec/06-execution-chain.md)
+8. [07 - Examples](./spec/07-examples.md)
 
 ## Status
 
-Draft (`apiVersion: civic.com/agent-profile/v1alpha1`). This repo is the authoritative source for the spec.
+Draft (`apiVersion: civic.com/agent-profile/v1alpha1`). This repo is the authoritative
+source for the spec.
