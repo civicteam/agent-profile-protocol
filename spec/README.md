@@ -56,8 +56,10 @@ apiVersion: civic.com/agent-profile/v1alpha1
 transforms: []
 ```
 
-Each list entry is a tagged object with a `kind:` discriminator, so a host that only
-cares about (say) `guardrails` can ignore everything else.
+Each list entry is a tagged object: transforms use `kind:` (`alias`, `clone`, `filter`,
+`preset-parameter`); processors and guardrails use `stage:` (the leg of the chain they
+attach to). The top-level list a record appears under is itself a discriminator, so a
+host that only cares about (say) `guardrails` can ignore everything else.
 
 ## What this proposal does not cover
 
