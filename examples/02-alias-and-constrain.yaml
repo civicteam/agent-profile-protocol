@@ -1,0 +1,50 @@
+# 02 — Alias and constrain
+#
+# Use case: "I can take a generic upstream tool, narrow it to one specific
+# business capability, and remove every decision the agent shouldn't be
+# making."
+#
+# The headline pattern: rename + new description + preset, all in one go.
+# The agent sees a tool specialised for its job. It cannot widen scope back
+# to the original — the alias is terminal, the original name is gone.
+#
+# Example: Slack `send_message` → `send_dm_to_alex`. Channel ID is
+# pre-bound, so the agent has no `channel_id` parameter to choose. It
+# cannot accidentally post to #general.
+#
+# An alias on its own is cosmetic. Combined with a preset, it removes
+# degrees of freedom from the agent — the security property and the
+# context-efficiency property arrive together.
+#
+# For the interpolated-preset variant (a pre-encoded template where the
+# agent fills named slots), and for multiple narrowed views from one
+# source, see 03-clone-narrow-views.yaml.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: slack
+
+transforms:
+  # Drop every Slack tool except the one we want to wrap. Without this the
+  # agent still sees `send_message` and can use it freely.
+  - kind: filter
+    mode: include
+    target: [send_message]
+
+  # Rename and re-describe so the agent reads the tool as the business
+  # capability it is — not as "the Slack API surface."
+  - kind: alias
+    target: send_message
+    to: send_dm_to_alex
+    description: |
+      Send a direct message to Alex on Slack. Use for status updates and
+      anything requiring Alex's attention. Messages are private — only
+      Alex sees them.
+
+  # Lock the destination. `channel_id` disappears from the agent-facing
+  # input schema; the agent cannot widen this back to a channel post.
+  - kind: preset-parameter
+    target: send_dm_to_alex
+    params:
+      - name: channel_id
+        value: D000000000  # Slack DM channel ID

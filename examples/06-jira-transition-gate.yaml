@@ -1,0 +1,42 @@
+# 06 — Jira transition gate
+#
+# Use case: "I can let the agent move Jira tickets to `In Progress` or
+# `In Review` but block any transition to `Done` or `Closed`, so closing a
+# ticket always stays in human hands."
+#
+# Pattern: parameter-value whitelist via `operator: not_in` on the
+# `transition.name` field. We pair the hard block with a require-approval
+# fallback on the next tier of states — useful when a workflow has
+# intermediate states that need oversight but aren't outright forbidden.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: atlassian
+
+guardrails:
+  # Hard block: agent may never close a ticket on its own.
+  - stage: request
+    target: transitionJiraIssue
+    when:
+      schemaPath: "$.transition.name"
+      operator: includes
+      value: ["Done", "Closed", "Won't Do", "Cancelled"]
+    outcome: block
+    reason: |
+      Closing or cancelling a Jira ticket is reserved for humans. Move the
+      ticket to "In Review" instead and a teammate will close it.
+    executionIndex: 0
+
+  # Approval required for anything that takes a ticket out of the "active
+  # work" band, e.g. handing back to product or blocking on another team.
+  - stage: request
+    target: transitionJiraIssue
+    when:
+      schemaPath: "$.transition.name"
+      operator: includes
+      value: ["Blocked", "Needs Triage", "Awaiting Product"]
+    outcome: require-approval
+    outcomeParams:
+      prompt: "Approve transitioning {{params.issueKey}} to {{params.transition.name}}?"
+      expirySeconds: 300
+    executionIndex: 10

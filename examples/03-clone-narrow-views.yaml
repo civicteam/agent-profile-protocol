@@ -1,0 +1,75 @@
+# 03 — Clone narrow views from a single raw tool
+#
+# Use case: "I can clone one Postgres `executeSql` tool into
+# `findUserByEmail`, `listActiveOrders`, and `reportMonthlyRevenue` — no raw
+# SQL surface for the agent."
+#
+# Trick: `filter` hides `executeSql` from the agent, but clones declared
+# against `executeSql` still work — clones reference upstream names, not
+# what the agent sees. Each clone gets an `interpolate` preset that exposes
+# only the parameters the query actually needs.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: postgres
+
+transforms:
+  # Hide the raw escape hatch.
+  - kind: filter
+    mode: exclude
+    target: [executeSql]
+
+  # Narrow view 1: look a user up by email.
+  - kind: clone
+    target: executeSql
+    to: findUserByEmail
+    description: Look up a single user by their primary email address.
+
+  - kind: preset-parameter
+    target: findUserByEmail
+    params:
+      - name: query
+        type: interpolate
+        value: "SELECT id, email, created_at FROM users WHERE email = {email} LIMIT 1"
+        replacement:
+          email:
+            type: string
+            format: email
+
+  # Narrow view 2: orders placed in the last 24 hours that are still open.
+  - kind: clone
+    target: executeSql
+    to: listActiveOrders
+    description: List orders placed in the last 24 hours that are still open.
+
+  - kind: preset-parameter
+    target: listActiveOrders
+    params:
+      - name: query
+        value: |
+          SELECT id, customer_id, total_cents, created_at
+            FROM orders
+           WHERE status = 'open'
+             AND created_at > now() - interval '24 hours'
+           ORDER BY created_at DESC
+
+  # Narrow view 3: monthly revenue rollup for a given YYYY-MM.
+  - kind: clone
+    target: executeSql
+    to: reportMonthlyRevenue
+    description: Total revenue (in cents) for the given month, e.g. "2026-05".
+
+  - kind: preset-parameter
+    target: reportMonthlyRevenue
+    params:
+      - name: query
+        type: interpolate
+        value: |
+          SELECT SUM(total_cents) AS revenue_cents
+            FROM orders
+           WHERE status = 'paid'
+             AND to_char(paid_at, 'YYYY-MM') = {month}
+        replacement:
+          month:
+            type: string
+            pattern: "^[0-9]{4}-(0[1-9]|1[0-2])$"

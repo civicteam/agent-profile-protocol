@@ -1,0 +1,23 @@
+# 01 — Filter to essentials
+#
+# Use case: "I can take a 100-tool MCP server and expose only the 5 read-only
+# tools my agent actually needs."
+#
+# Why it matters: tool-list bloat is one of the largest causes of LLM
+# tool-selection errors. A `filter` with `mode: include` is a hard whitelist —
+# every other tool the upstream advertises is dropped from `tools/list` and
+# returns `MethodNotFound` if called.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: github
+
+transforms:
+  - kind: filter
+    mode: include
+    target:
+      - list_issues
+      - get_issue
+      - get_pull_request
+      - list_pull_requests
+      - get_repository

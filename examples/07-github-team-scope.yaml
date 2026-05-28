@@ -1,0 +1,44 @@
+# 07 — GitHub team-scope
+#
+# Use case: "I can scope `list_issues` / `get_pull_request` to my team's
+# repos — block out-of-scope calls and strip cross-repo leaks from
+# responses."
+#
+# Two-sided defence:
+#   - Request guardrail: block calls where `owner` isn't `fooinc`.
+#     Cheap, deterministic, denies the call before it leaves the host.
+#   - Response guardrail: even on allowed calls, the upstream might return
+#     items from outside our org (search-style endpoints, cross-referenced
+#     PRs). The response-side rule redacts those entries by selecting the
+#     parent node of any offending `head.repo.owner.login` and replacing it
+#     with an explanatory marker.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: github
+
+guardrails:
+  # Inbound: refuse any call addressed to a non-team owner.
+  - stage: request
+    target: [list_issues, get_issue, get_pull_request, list_pull_requests, get_repository]
+    when:
+      schemaPath: "$.owner"
+      operator: not_equals
+      value: fooinc
+    outcome: block
+    reason: "This profile is scoped to the fooinc org. Pass owner=fooinc."
+
+  # Outbound: redact items whose head repo isn't ours. The schemaPath finds
+  # the offending login deep inside each item; actionPath `^^^^` walks up to
+  # the array element itself so the whole entry gets replaced, not just the
+  # login field.
+  - stage: response
+    target: [list_pull_requests, list_issues]
+    when:
+      schemaPath: "$.items[*].head.repo.owner.login"
+      operator: not_equals
+      value: fooinc
+    outcome: redact
+    outcomeParams:
+      path: "^^^^"
+      replacement: { redacted: "out-of-scope repository" }

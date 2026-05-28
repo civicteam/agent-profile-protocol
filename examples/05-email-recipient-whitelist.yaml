@@ -1,0 +1,30 @@
+# 05 — Email recipient whitelist
+#
+# Use case: "I can restrict `sendEmail` to a defined recipient whitelist —
+# `@foo.com` plus an explicit list of external counterparties — and block
+# anything else with a clear reason."
+#
+# Two layers of defence:
+#   - A request guardrail fires when ANY recipient in `$.to[*]` is not on
+#     the allowed list. `onNoMatch: fail-closed` is the default for `block`,
+#     so a malformed call without a `to` field is also rejected.
+#   - The `reason` is surfaced to the agent verbatim, so it knows why and
+#     can suggest a fix to the human user.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: gmail
+
+guardrails:
+  - stage: request
+    target: sendEmail
+    when:
+      schemaPath: "$.to[*]"
+      operator: regex
+      # Allow anything ending in @foo.com OR the three named external
+      # counterparties. Everything else trips the gate.
+      value: "^(?!.*@foo\\.com$)(?!partner@bigcustomer\\.example$)(?!legal@outsidecounsel\\.example$)(?!auditor@accountingfirm\\.example$).+$"
+    outcome: block
+    reason: |
+      Outbound email is restricted to @foo.com recipients and the approved
+      external counterparty list. Remove disallowed recipients and retry.

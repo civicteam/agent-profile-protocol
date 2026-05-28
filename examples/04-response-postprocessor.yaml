@@ -1,0 +1,74 @@
+# 04 — Response post-processor for token efficiency
+#
+# Use case: "I can collapse a verbose tool response to just the fields the
+# agent needs — measurably fewer tokens, lower bill, sharper reasoning."
+#
+# Most MCP tools wrap an existing API and return everything that API returns.
+# That's defensible at the API layer and disastrous at the context layer:
+# every irrelevant token is paid for by the agent's owner and consumes
+# attention the model could spend on the task.
+#
+# Processors run server-side, after the upstream response and before the
+# agent ever sees it. The agent gets the trimmed shape.
+#
+# Three actions composed here:
+#   1. `pickFields` — drop labels and metadata from log entries; keep
+#      timestamp and message.
+#   2. `abbreviate` — truncate over-long messages so a single stack trace
+#      doesn't blow the budget.
+#   3. `jsonToCSV` — convert time-series arrays to CSV (no repeated keys),
+#      typically 4–8× smaller than the JSON equivalent.
+#
+# Processors are best-effort: if the response shape is unexpected, a
+# processor logs a warning and passes the un-processed payload through. If
+# you need fail-stop trimming (e.g. PII redaction), use a guardrail with
+# `outcome: redact` instead — that aborts the call on a missing path.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: grafana
+
+processors:
+  # Logs: keep only what the agent reasons over.
+  - kind: response
+    target: query_loki_logs
+    action: pickFields
+    actionPath: "$.data.result[*].values[*]"
+    actionParams:
+      fields: ["timestamp", "message"]
+    executionIndex: 1000
+
+  # Long messages (stack traces, JSON blobs in log lines) get truncated.
+  # `smart` strategy preserves whole tokens; `hard` cuts mid-token.
+  - kind: response
+    target: query_loki_logs
+    action: abbreviate
+    actionPath: "$.data.result[*].values[*].message"
+    actionParams:
+      maxLength: 500
+      strategy: smart
+      suffix: " …[truncated]"
+    executionIndex: 1100
+
+  # Metrics: tabular time-series compress dramatically as CSV because the
+  # JSON form repeats every key on every row.
+  - kind: response
+    target: query_prometheus
+    action: jsonToCSV
+    actionPath: "$.data.result"
+    actionParams:
+      includeHeaders: true
+      fields: ["timestamp", "metric", "value"]
+    executionIndex: 1000
+
+  # Drop noisy metadata fields from search hits across every Grafana tool
+  # in this connection. `*.field` wildcards in pickFields/removeFields let
+  # one rule cover an array of similarly-shaped objects.
+  - kind: response
+    action: removeFields
+    actionParams:
+      fields:
+        - "*.executedQueryString"
+        - "*.queryEditorHelp"
+        - "*.frames[*].schema.meta"
+    executionIndex: 1200

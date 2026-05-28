@@ -1,0 +1,75 @@
+# 09 — Multi-connection overlay
+#
+# Use case: "I can write one profile file that applies different overlays to
+# different MCP connections, plus one cross-cutting document that applies to
+# every connection the host has registered."
+#
+# The host owns the connections; the profile just attaches overlays to
+# them. Multiple YAML documents in one file, separated by `---`, give you
+# per-connection and cross-cutting rules in a single deployable artifact.
+
+# ─── Doc 1: Gmail — recipient whitelist ──────────────────────────────────────
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: gmail
+
+guardrails:
+  - stage: request
+    target: sendEmail
+    when:
+      schemaPath: "$.to[*]"
+      operator: not_ends_with
+      value: "@foo.com"
+    outcome: block
+    reason: "Outbound email is restricted to @foo.com recipients."
+
+---
+# ─── Doc 2: GitHub — read-only whitelist ─────────────────────────────────────
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: github
+
+transforms:
+  - kind: filter
+    mode: include
+    target:
+      - list_issues
+      - get_issue
+      - get_pull_request
+      - list_pull_requests
+      - get_repository
+
+---
+# ─── Doc 3: Atlassian — project-context preset ───────────────────────────────
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: atlassian
+
+transforms:
+  - kind: preset-parameter
+    params:
+      - name: projectKey
+        value: FOO
+
+---
+# ─── Doc 4: Cross-cutting — approval gate on any destructive tool ────────────
+# No `matches:` block, so the host applies this document to every registered
+# connection. The target list is explicit (v1 has no annotation-based
+# matching) — name every tool that needs the gate.
+apiVersion: civic.com/agent-profile/v1alpha1
+
+guardrails:
+  - stage: request
+    target:
+      - deleteJiraIssue          # atlassian
+      - deleteRepository         # github
+      - dropTable                # postgres
+      - trashMessage             # gmail
+    when:
+      schemaPath: "$"
+      operator: exists
+      value: true
+    outcome: require-approval
+    outcomeParams:
+      prompt: "Approve destructive call to {{tool.name}}?"
+      expirySeconds: 300

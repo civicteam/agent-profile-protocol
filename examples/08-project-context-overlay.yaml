@@ -1,0 +1,57 @@
+# 08 — Project-context overlay
+#
+# Use case: "I can ship a FOO-project overlay that bakes in the magic
+# strings (cloud id, project key, story-point custom field) and re-describes
+# the tools so the agent never needs to know the underlying IDs."
+#
+# v1 has no skills concept; the same payoff is expressed as a single
+# document that combines:
+#   - preset-parameter (lock the project IDs across every tool)
+#   - alias (re-describe the search tool with FOO-specific guidance)
+#
+# Drop this file alongside an Atlassian connection and every Atlassian tool
+# the agent sees is silently bound to the FOO project.
+
+apiVersion: civic.com/agent-profile/v1alpha1
+matches:
+  name: atlassian
+
+transforms:
+  # Lock the Atlassian cloud and FOO project across every Atlassian tool
+  # that declares the parameter. Tools without it are silently skipped.
+  - kind: preset-parameter
+    params:
+      - name: cloudId
+        value: "00000000-0000-0000-0000-000000000000"
+
+  - kind: preset-parameter
+    params:
+      - name: projectKey
+        value: FOO
+
+  # Story-point custom-field id only applies to the issue-edit tool.
+  - kind: preset-parameter
+    target: [editJiraIssue]
+    params:
+      - name: storyPointsCustomFieldId
+        value: customfield_00000
+
+  # Re-describe the search tool so the agent knows how to write FOO-shaped
+  # JQL without having to be told the project key.
+  - kind: alias
+    target: searchJiraIssuesUsingJql
+    to: searchJiraIssuesUsingJql
+    description: |
+      Search FOO issues with JQL. The `project = FOO` clause is added
+      automatically — write JQL as if it were the only project, e.g.
+      `assignee = currentUser() AND status = "In Progress"`.
+
+  # Same trick for the "create issue" tool: it lands in FOO, so spell out
+  # the conventions the agent should follow when filling in fields.
+  - kind: alias
+    target: createJiraIssue
+    to: createJiraIssue
+    description: |
+      Create a new FOO ticket. Required: summary, issueType. Tickets
+      default to the "Selected for Development" column; use
+      `transitionJiraIssue` to move it once created.
