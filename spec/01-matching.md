@@ -139,12 +139,11 @@ When several profile documents bind to the same connection, their effects
 
 * `transforms`: concatenated. Earlier transforms feed later ones (e.g. a Doc
   A alias produces a name that a Doc B preset-parameter can target).
-* `processors`: concatenated. They run in document order within their stage,
-  unless an explicit `executionIndex` overrides.
-* `guardrails`: concatenated. They run in document order within their stage,
-  unless an explicit `executionIndex` overrides. The runtime evaluates them
-  all even if an earlier one fires (so `block` always wins, but `redact`s
-  stack).
+* `processors`: concatenated. They run in document order within their stage
+  (list order within a document).
+* `guardrails`: concatenated. They run in document order within their stage
+  (list order within a document). The runtime evaluates them all even if an
+  earlier one fires (so `block` always wins, but `redact`s stack).
 
 There is no implicit precedence by `matches` specificity. A more specific
 match (`name + version`) does **not** override a more general match (`name`

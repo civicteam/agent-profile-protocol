@@ -16,7 +16,6 @@ Transform:
   description: string?   # new description (only for alias / clone)
   # …kind-specific fields…
   enabled: boolean?      # default true
-  executionIndex: int?   # within-stage ordering; default 0
 ```
 
 There is no `id`, no `spec:` wrapper, no nested-object form. Other syntaxes
@@ -62,8 +61,11 @@ Removes tools from the agent-facing list.
 error (either accidental "exclude nothing" or accidental "remove
 everything").
 
-A filtered tool is still available as a clone source — `filter` only affects
-what the agent sees on `tools/list`, not what later transforms can build on.
+A filtered tool is still available as a `clone` **source**, because `clone`
+runs before `filter` in the pipeline (see _06 - Execution chain_). It is
+**not** available to `alias` or `preset-parameter`, which run after `filter`:
+targeting a filtered-out tool from those is a startup error, because its name
+is no longer present at apply time.
 
 ### `alias`
 
@@ -100,9 +102,9 @@ below.
 #### Chaining aliases
 
 Because `target` matches the *current* name and `alias` is terminal for the
-*old* name, aliases chain in document (or `executionIndex`) order. The second
-alias targets the first alias's `to` name — the live handle, not the dead
-original.
+*old* name, aliases chain in composition order (document order across
+documents, list order within a document). The second alias targets the first
+alias's `to` name — the live handle, not the dead original.
 
 | Sequence (only `a` exists initially) | Allowed? | Why |
 | --- | --- | --- |
@@ -216,24 +218,22 @@ should be a processor, not a preset.
 
 ## Ordering and composition
 
-Within a document, transforms run in list order; with `executionIndex`
-overrides, they run in `executionIndex` ascending.
+Ordering has no author-controllable knob. It is fixed by two rules:
+
+1. **Across kinds** — the stage pipeline in _06 - Execution chain_ is
+   authoritative. On `list` the order is `clone → filter → alias →
+   preset-parameter` (clone runs before filter so a tool can be cloned and the
+   original hidden in the same overlay); `request` and `response` mirror this.
+   This order is a property of what each kind does, not a choice.
+2. **Within a kind** — transforms run in composition order: document order
+   across documents, then list order within a document.
 
 Across documents that bind to the same connection, transforms compose in
 **document order**. Document A's transforms are applied first, producing an
 intermediate tool list; Document B's transforms then run against that
-intermediate list.
-
-The recommended pipeline within a single stage is:
-
-1. `filter` (drop tools early so later transforms don't waste work).
-2. `clone` (introduce derived tools while their sources still exist by
-   name).
-3. `alias` (rename; this is terminal for the source name).
-4. `preset-parameter` (fix or hide parameters on the final names).
-
-A host MAY assign default `executionIndex`s in this order when no explicit
-value is set, so that profiles written in any order materialise predictably.
+intermediate list. A later document cannot reorder its transforms ahead of an
+earlier document's within the same kind — document order is the only
+precedence (_06_).
 
 ## Failure handling
 
@@ -245,6 +245,7 @@ value is set, so that profiles written in any order materialise predictably.
 | `preset-parameter` lists a param the tool does not declare, `strict: false` | Skip + debug log. |
 | `preset-parameter` lists a param the tool does not declare, `strict: true` | Startup error. |
 | Filter `target` includes a name that does not exist | Startup error. |
+| `alias` / `preset-parameter` `target` names a tool removed by an earlier `filter` | Startup error — the name is not present at apply time. |
 
 Transforms are static configuration. There is no per-call failure for
 transforms — every failure mode is at profile load time.

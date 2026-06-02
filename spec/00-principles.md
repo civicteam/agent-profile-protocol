@@ -80,8 +80,10 @@ Two principles govern this ordering:
    clone-shape edits map upstream results back into the agent-facing
    structure).
 
-Within a stage, items of the same kind run in `executionIndex` order (lower
-first). See _06 - Execution chain_.
+Ordering is fully determined and not author-controllable. Across kinds, the
+stage pipeline fixes the order (it is a property of what each kind does).
+Within a single kind, items run in composition order — document order across
+documents, list order within a document. See _06 - Execution chain_.
 
 ## Scope boundaries
 
