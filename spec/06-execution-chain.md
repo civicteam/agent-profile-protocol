@@ -54,9 +54,8 @@ apply guardrails with stage = list
 emit materialised → agent-facing tool list for C
 ```
 
-Within each step, items run in `executionIndex` order (ascending). The
-default execution indices (recommended; not enforced) are listed under
-"Within-stage ordering" below.
+Within each step, items run in composition order (see "Within-stage ordering"
+below).
 
 ## `request` stage
 
@@ -117,27 +116,18 @@ apply transforms with kind = clone        (response stage)
 
 ## Within-stage ordering
 
-Within any single bullet (e.g. "request guardrails"), items run in
-ascending `executionIndex`.
+Ordering is fully determined — there is no author-controllable knob:
 
-Recommended default execution indices (not enforced — a host MAY assign
-these when a profile omits explicit values, so that profiles written without
-explicit ordering still materialise predictably):
+1. **Across kinds** — the numbered steps in each stage above are
+   authoritative and fixed. They reflect what each kind does (e.g. clone
+   before filter so a tool can be cloned and the original hidden in one
+   overlay), not a tunable preference.
+2. **Within a single kind** — within any single step (e.g. "request
+   guardrails"), items run in **composition order**: document order across
+   documents (per _01 - Matching_), then list order within a document.
 
-| Step | Default range |
-| --- | --- |
-| Clone transforms (list) | 100 |
-| Filter transforms (list) | 200 |
-| Alias transforms (list) | 300 |
-| Preset-parameter transforms (list) | 400 |
-| List guardrails | 0–999 |
-| Request transforms (alias / clone reverse) | 100–200 |
-| Preset-parameter (request) | 400 |
-| Request processors | 1000+ |
-| Request guardrails | 0–999 |
-| Response processors | 1000+ |
-| Response guardrails | 0–999 |
-| Response clone transforms | 200 |
+This makes the order a closed function of *(kind, document position, list
+position)*. Two conformant hosts materialise the same overlay identically.
 
 ## Composition across profile documents
 
@@ -150,9 +140,9 @@ Concretely, if Doc A has `[T1, T2]` and Doc B has `[T3]`, C's effective
 transform list is `[T1, T2, T3]`. T1 may rename a tool that T3 then
 preset-parameterises.
 
-`executionIndex` overrides document order: if T3 has `executionIndex: 50`
-and T1 has the default `100`, T3 runs first within its stage even though it
-came from a later document.
+Document order is the only precedence. A later document cannot reorder its
+items ahead of an earlier document's within the same kind — there is no
+override knob.
 
 ## Failure handling
 

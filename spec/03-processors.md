@@ -12,7 +12,6 @@ Processor:
   stage: enum                 # request | response — which leg of the chain this attaches to
   target: string | [string]?  # which tools — see "Targeting"
   enabled: boolean?           # default true
-  executionIndex: int?        # within-stage ordering; default 1000
 
   # Optional condition. If present, the processor only runs when this is true.
   when:
@@ -152,7 +151,6 @@ processors:
     action: htmlToMarkdown
     actionPath: "$.content"
     actionParams: { preserveImages: true, preserveLinks: true, stripStyles: true }
-    executionIndex: 1000
 ```
 
 ### Pick only useful fields from a Jira issue
@@ -165,7 +163,6 @@ processors:
     actionPath: "$"
     actionParams:
       fields: ["key", "fields.summary", "fields.status.name", "fields.assignee.displayName"]
-    executionIndex: 1100
 ```
 
 ### Block outbound mail to civic.com on the renamed tool
@@ -191,5 +188,6 @@ See _06 - Execution chain_. Summary:
 * `response` processors run **before** response-stage guardrails — so a
   guardrail evaluates the body the agent will actually see.
 
-Within a stage, multiple processors run in `executionIndex` order (lower
-first).
+Within a stage, multiple processors run in composition order: document order
+across documents, then list order within a document. There is no
+author-controllable ordering knob.

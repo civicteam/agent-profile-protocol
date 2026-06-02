@@ -11,7 +11,6 @@ Guardrail:
   stage: enum                  # list | request | response
   target: string | [string]?   # which tool(s) — same shape as transforms / processors
   enabled: boolean?            # default true
-  executionIndex: int?         # within-stage ordering; default 0
 
   when:
     schemaPath: string         # JSONPath into the relevant body (see "JSONPath dialect" in 03-processors)
@@ -145,10 +144,11 @@ See _06 - Execution chain_. Summary:
 * `response` guardrails: after response processors, before any response-side
   transforms. Guardrails evaluate the body the agent will actually see.
 
-Within a stage, guardrails run in `executionIndex` order. The first
-guardrail with a non-`allow` outcome wins for `block` and
-`require-approval`. For `redact`, the host continues to evaluate further
-guardrails on the redacted body (so multiple redactions stack).
+Within a stage, guardrails run in composition order: document order across
+documents, then list order within a document. The first guardrail with a
+non-`allow` outcome wins for `block` and `require-approval`. For `redact`, the
+host continues to evaluate further guardrails on the redacted body (so
+multiple redactions stack).
 
 ## Worked examples
 
@@ -182,7 +182,6 @@ guardrails:
       value: "(?i)api[_-]?key|secret|bearer\\s+[A-Za-z0-9._-]{20,}"
     outcome: redact
     outcomeParams: { replacement: "[REDACTED]" }
-    executionIndex: 0
 ```
 
 ### Require approval for a specific destructive tool

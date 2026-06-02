@@ -36,7 +36,6 @@ processors:
     actionPath: "$.data.result[*].values[*]"
     actionParams:
       fields: ["timestamp", "message"]
-    executionIndex: 1000
 
   # Long messages (stack traces, JSON blobs in log lines) get truncated.
   # `smart` strategy preserves whole tokens; `hard` cuts mid-token.
@@ -48,7 +47,6 @@ processors:
       maxLength: 500
       strategy: smart
       suffix: " …[truncated]"
-    executionIndex: 1100
 
   # Metrics: tabular time-series compress dramatically as CSV because the
   # JSON form repeats every key on every row.
@@ -59,7 +57,6 @@ processors:
     actionParams:
       includeHeaders: true
       fields: ["timestamp", "metric", "value"]
-    executionIndex: 1000
 
   # Drop noisy metadata fields from search hits across every Grafana tool
   # in this connection. `*.field` wildcards in pickFields/removeFields let
@@ -71,4 +68,3 @@ processors:
         - "*.executedQueryString"
         - "*.queryEditorHelp"
         - "*.frames[*].schema.meta"
-    executionIndex: 1200

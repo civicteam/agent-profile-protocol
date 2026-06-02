@@ -25,7 +25,6 @@ guardrails:
     reason: |
       Closing or cancelling a Jira ticket is reserved for humans. Move the
       ticket to "In Review" instead and a teammate will close it.
-    executionIndex: 0
 
   # Approval required for anything that takes a ticket out of the "active
   # work" band, e.g. handing back to product or blocking on another team.
@@ -39,4 +38,3 @@ guardrails:
     outcomeParams:
       prompt: "Approve transitioning {{params.issueKey}} to {{params.transition.name}}?"
       expirySeconds: 300
-    executionIndex: 10
