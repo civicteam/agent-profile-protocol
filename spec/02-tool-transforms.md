@@ -61,8 +61,11 @@ Removes tools from the agent-facing list.
 error (either accidental "exclude nothing" or accidental "remove
 everything").
 
-A filtered tool is still available as a clone source — `filter` only affects
-what the agent sees on `tools/list`, not what later transforms can build on.
+A filtered tool is still available as a `clone` **source**, because `clone`
+runs before `filter` in the pipeline (see _06 - Execution chain_). It is
+**not** available to `alias` or `preset-parameter`, which run after `filter`:
+targeting a filtered-out tool from those is a startup error, because its name
+is no longer present at apply time.
 
 ### `alias`
 
@@ -242,6 +245,7 @@ precedence (_06_).
 | `preset-parameter` lists a param the tool does not declare, `strict: false` | Skip + debug log. |
 | `preset-parameter` lists a param the tool does not declare, `strict: true` | Startup error. |
 | Filter `target` includes a name that does not exist | Startup error. |
+| `alias` / `preset-parameter` `target` names a tool removed by an earlier `filter` | Startup error — the name is not present at apply time. |
 
 Transforms are static configuration. There is no per-call failure for
 transforms — every failure mode is at profile load time.
