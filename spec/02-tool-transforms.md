@@ -87,6 +87,33 @@ Aliases are **terminal** — once a tool has been aliased away, the old name
 no longer exists in the materialised list, and later transforms that
 reference it by name will fail. The `to` name is the only handle.
 
+A call that arrives for the pre-alias name (stale agent state, or a guess)
+MUST be rejected with `MethodNotFound` — the old name is not on the
+materialised list, so it is not a valid call target. See "Dispatch surface".
+
+The `to` name is a valid `target` for later `alias`, `preset-parameter`, and
+`filter` transforms (it is the live handle). It is **not** a valid `clone`
+source: `clone` copies a schema-bearing tool, and an alias only renames one
+that another transform may already have consumed. See the `clone` chain table
+below.
+
+#### Chaining aliases
+
+Because `target` matches the *current* name and `alias` is terminal for the
+*old* name, aliases chain in document (or `executionIndex`) order. The second
+alias targets the first alias's `to` name — the live handle, not the dead
+original.
+
+| Sequence (only `a` exists initially) | Allowed? | Why |
+| --- | --- | --- |
+| `alias a→b`, `alias b→c` | yes | the second alias targets `b`, which exists at that point; the net result is `a` materialised as `c`. |
+| `alias b→c`, `alias a→b` | no | the first entry's `target: b` resolves to no tool → startup error. |
+
+Order is load-bearing: a chain must be written so each alias's `target`
+already exists at its position. The runtime rejects the wrong order at load
+time — either a missing `target`, or a `to` that collides with a
+not-yet-renamed tool.
+
 ### `clone`
 
 Produces a new tool from an existing one. Both tools are visible to the
@@ -114,7 +141,7 @@ key difference from `alias` (which is terminal):
 | Sequence | Allowed? | Why |
 | --- | --- | --- |
 | `clone A → B`, `clone B → C`, `alias A → D` | yes | Each clone introduces a real new name; aliasing the original `A` last is fine because both clones already referenced `A` (resolved at their own application time). |
-| `clone A → B`, `alias B → C`, `clone C → D` | no | `C` is the result of an alias, not a real tool. The runtime MUST reject this at load time. |
+| `clone A → B`, `alias B → C`, `clone C → D` | no | `C` is the result of an alias, so it is not a valid **`clone` source** (a clone needs a schema-bearing tool to copy). `C` is still a valid `target` for `alias`, `preset-parameter`, and `filter`. The runtime MUST reject the `clone C → D` at load time. |
 
 ### `preset-parameter`
 
@@ -221,3 +248,16 @@ value is set, so that profiles written in any order materialise predictably.
 
 Transforms are static configuration. There is no per-call failure for
 transforms — every failure mode is at profile load time.
+
+## Dispatch surface
+
+The materialised `tools/list` is the authoritative set of callable names. A
+`tools/call` for any name not present in it — whether removed by `filter`,
+renamed away by `alias`, or never defined upstream — MUST be rejected with
+`MethodNotFound`. This is a property of dispatch, not a transform failure:
+transforms themselves still fail only at load time (see the table above).
+
+In particular, an `alias` that renames a tool to restrict it (e.g. hiding
+`executeSql` behind a narrower name) is only effective if the pre-alias name
+is unreachable. A host that lets the original upstream name pass through
+unchanged does not conform.
