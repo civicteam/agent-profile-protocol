@@ -24,7 +24,7 @@
 # you need fail-stop trimming (e.g. PII redaction), use a guardrail with
 # `outcome: redact` instead — that aborts the call on a missing path.
 
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: grafana
 

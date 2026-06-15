@@ -9,7 +9,7 @@
 # per-connection and cross-cutting rules in a single deployable artifact.
 
 # ─── Doc 1: Gmail — recipient whitelist ──────────────────────────────────────
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: gmail
 
@@ -25,7 +25,7 @@ guardrails:
 
 ---
 # ─── Doc 2: GitHub — read-only whitelist ─────────────────────────────────────
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
 
@@ -41,7 +41,7 @@ transforms:
 
 ---
 # ─── Doc 3: Atlassian — project-context preset ───────────────────────────────
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: atlassian
 
@@ -56,7 +56,7 @@ transforms:
 # No `matches:` block, so the host applies this document to every registered
 # connection. The target list is explicit (v1 has no annotation-based
 # matching) — name every tool that needs the gate.
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 
 guardrails:
   - stage: request

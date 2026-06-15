@@ -34,5 +34,5 @@ Sections (read in order if you're new to it):
 
 ## Status
 
-Draft (`apiVersion: civic.com/agent-profile/v1alpha1`). This repo is the authoritative
+Draft (`version: 0.1.0`). This repo is the authoritative
 source for the spec.

@@ -13,7 +13,7 @@ document is independent: an unrelated config can be appended without touching
 existing documents.
 
 ```yaml
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
   version: "^0.1"
@@ -22,7 +22,7 @@ transforms: [...]
 processors: [...]
 guardrails: [...]
 ---
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: atlassian
   version: "^0.1"
@@ -37,7 +37,7 @@ Required top-level fields per document:
 
 | Field | Required? | Notes |
 | --- | --- | --- |
-| `apiVersion` | yes | Must appear in every document (the host parses each one independently). |
+| `version` | yes | The protocol version this document targets (semver, e.g. `0.1.0`). Must appear in every document (the host parses each one independently). Distinct from `matches.version`, which is the *upstream connection's* version. |
 | `matches` | no | When omitted, the document applies to **every** connection the host has registered. |
 | `transforms` | no | List of `kind: …` entries. |
 | `processors` | no | Same. |
@@ -104,8 +104,8 @@ connections is:
    mcp`; most also report a `version` via the MCP `initialize` exchange.
 
 2. **Profile parses.** The host loads the profile YAML stream and validates
-   each document against its `apiVersion` schema. Parse errors fail loud —
-   the profile does not partially apply.
+   each document against the schema for its declared `version`. Parse errors
+   fail loud — the profile does not partially apply.
 
 3. **Per-document matching.** For each profile document **D**, the host
    evaluates `D.matches` against every registered connection. The result is
@@ -154,7 +154,7 @@ order.
 
 ```yaml
 # Doc 1: rename `sendEmail` on every MCP connection.
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 transforms:
   - kind: alias
     target: sendEmail
@@ -162,7 +162,7 @@ transforms:
 
 ---
 # Doc 2: preset the recipient on the Gmail connection specifically.
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: gmail
 transforms:
@@ -210,8 +210,8 @@ covers several environments; the second is almost always a typo.
 The following keys at the top level of a document are reserved and MUST NOT
 be repurposed by an implementation:
 
-`apiVersion`, `matches`, `transforms`, `processors`, `guardrails`,
-`metadata` (reserved for v1.1 doc-level annotations such as authorship and
+`version`, `matches`, `transforms`, `processors`, `guardrails`,
+`metadata` (reserved for future doc-level annotations such as authorship and
 description).
 
 Any other top-level key MUST cause the host to refuse to load the profile —

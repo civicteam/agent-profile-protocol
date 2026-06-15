@@ -13,7 +13,7 @@ concerns; this section just declares where the credential blob lives.
 the document's `matches` block accepts (_01 - Matching_).
 
 ```yaml
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
 
@@ -146,7 +146,7 @@ block — every other layer stays identical.
 ### File-backed self-hosted setup
 
 ```yaml
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
 
@@ -162,7 +162,7 @@ development and single-tenant deployments.
 ### Two connections sharing one file pattern
 
 ```yaml
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   - name: github
   - name: gitlab
@@ -177,7 +177,7 @@ Each matched connection gets its own file, named for the connection.
 ### AuthZ-API-backed production setup
 
 ```yaml
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
 

@@ -42,7 +42,7 @@ model from sections 00 and 01.
 A profile file is a YAML stream — each document independent, separated by `---`:
 
 ```yaml
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
   version: "^0.1"     # `type:` defaults to `mcp`
@@ -51,7 +51,7 @@ transforms: []       # alias / clone / filter / preset-parameter
 processors: []       # request preprocessors + response postprocessors
 guardrails: []       # gates (block / redact / approve)
 ---
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 # No `matches:` — applies to every registered connection.
 transforms: []
 ```

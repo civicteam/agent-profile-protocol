@@ -11,7 +11,7 @@
 #   - The `reason` is surfaced to the agent verbatim, so it knows why and
 #     can suggest a fix to the human user.
 
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: gmail
 

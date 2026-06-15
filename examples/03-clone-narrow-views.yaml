@@ -9,7 +9,7 @@
 # what the agent sees. Each clone gets an `interpolate` preset that exposes
 # only the parameters the query actually needs.
 
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: postgres
 

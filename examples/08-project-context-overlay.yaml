@@ -12,7 +12,7 @@
 # Drop this file alongside an Atlassian connection and every Atlassian tool
 # the agent sees is silently bound to the FOO project.
 
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: atlassian
 
