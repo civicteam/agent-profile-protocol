@@ -13,7 +13,7 @@
 #     parent node of any offending `head.repo.owner.login` and replacing it
 #     with an explanatory marker.
 
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
 

@@ -102,8 +102,9 @@ server's wire format, **and nothing else**.
   base profile + per-tenant overlay)? v1 says no — composition via document
   order already covers most overlay use cases. `extends:` is a v1.1
   candidate once we see real overlap patterns.
-* **Versioning.** `apiVersion: civic.com/agent-profile/v1alpha1`. Explicit
-  about being pre-stable; breaking changes are allowed inside `v1alphaN`.
+* **Versioning.** Each document declares `version: 0.1.0` (semver). Explicit
+  about being pre-stable; while the major version is `0`, breaking changes
+  are allowed between minor versions.
 * **Processors vs guardrails.** They share infrastructure (JSONPath,
   condition shape, the same engine). v1 keeps them separate because
   processors are best-effort and guardrails can fail-stop. A merger (e.g. a

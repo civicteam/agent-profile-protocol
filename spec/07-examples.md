@@ -11,7 +11,7 @@ illustrated below.
 ## Model in one paragraph
 
 A profile file is a sequence of YAML documents separated by `---`. Each document
-declares an `apiVersion`, an optional `matches` block that selects one or more
+declares a `version`, an optional `matches` block that selects one or more
 connections by metadata (`name`, `type`, `version`), and any combination of
 `transforms`, `processors`, and `guardrails` to apply to the matched connections.
 Documents that omit `matches` apply to **every** matched connection in the host
@@ -51,7 +51,7 @@ the interaction between cloning and processors.
 # Matches the host's GitHub MCP connection. No transforms — but a `credentials:`
 # block tells the host to persist the GitHub OAuth blob to a local file.
 # Suitable for self-hosted single-tenant setups.
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: github
   version: "^0.1"
@@ -64,7 +64,7 @@ credentials:
 
 ---
 # ─── Doc 2: Atlassian — preset params + description-only alias ────────────────
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: atlassian
   version: "^0.1"
@@ -104,7 +104,7 @@ transforms:
 # With no `matches` block this document applies to every MCP connection the
 # host config exposes. Useful for cross-cutting rules like "rename sendEmail
 # everywhere" or "block outbound mail to .org domains regardless of source".
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 
 transforms:
   # Rename sendEmail → informTeam wherever it appears.
@@ -176,7 +176,7 @@ processors:
 # Same connection, but persistence is delegated to a Civic-AuthZ service.
 # A profile can move from file-backed to authz-api-backed by editing only
 # this block — every transform/processor/guardrail stays as it was.
-apiVersion: civic.com/agent-profile/v1alpha1
+version: 0.1.0
 matches:
   name: postgres
 
